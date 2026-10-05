@@ -146,29 +146,30 @@ def build_router(handler: Handler) -> APIRouter:
           - price is negative
         """
 
-        try:
-            data = handler.read_data()
-        except OSError:
-            raise HTTPException(status_code=500, detail="failed to read data")
+        with handler._lock:
+            try:
+                data = handler.read_data()
+            except OSError:
+                raise HTTPException(status_code=500, detail="failed to read data")
 
-        if len(payload.name.strip()) <= 0:
-            raise HTTPException(status_code=400, detail="name cannot be blank")
+            if len(payload.name.strip()) <= 0:
+                raise HTTPException(status_code=400, detail="name cannot be blank")
 
-        if payload.price < 0:
-            raise HTTPException(status_code=400, detail="price cannot be negative")
+            if payload.price < 0:
+                raise HTTPException(status_code=400, detail="price cannot be negative")
 
-        new_item = {
-            "id": int(time.time() * 1000),
-            "name": payload.name,
-            "category": payload.category,
-            "price": payload.price,
-        }
-        data.append(new_item)
+            new_item = {
+                "id": int(time.time() * 1000),
+                "name": payload.name,
+                "category": payload.category,
+                "price": payload.price,
+            }
+            data.append(new_item)
 
-        try:
-            handler.write_data(data)
-        except OSError:
-            raise HTTPException(status_code=500, detail="failed to save data")
+            try:
+                handler.write_data(data)
+            except OSError:
+                raise HTTPException(status_code=500, detail="failed to save data")
 
         return new_item
 
