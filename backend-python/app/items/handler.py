@@ -145,7 +145,7 @@ def build_router(handler: Handler) -> APIRouter:
           - name is missing or blank
           - price is negative
         """
-        
+
         try:
             data = handler.read_data()
         except OSError:
