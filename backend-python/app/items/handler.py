@@ -59,10 +59,6 @@ class Handler:
             with open(self.data_path, "r", encoding="utf-8") as f:
                 items = json.load(f)
 
-            # BUG: We update the cache without holding the lock across the
-            # whole check-then-act sequence above, so two concurrent threads
-            # can both decide to re-read the file and race to overwrite each
-            # other's cache entry.
             self._cached = items
             self._cached_mtime = mtime
 
