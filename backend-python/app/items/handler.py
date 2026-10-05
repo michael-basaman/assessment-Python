@@ -145,8 +145,7 @@ def build_router(handler: Handler) -> APIRouter:
           - name is missing or blank
           - price is negative
         """
-        # TODO: validate `payload` fields before saving
-
+        
         try:
             data = handler.read_data()
         except OSError:
