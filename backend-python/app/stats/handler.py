@@ -77,7 +77,6 @@ def build_router(handler: Handler) -> APIRouter:
 
     @router.get("/api/stats")
     def get_stats():
-        # BUG: reads and parses the entire file on every request.
         return handler.get_stats()
 
     return router
