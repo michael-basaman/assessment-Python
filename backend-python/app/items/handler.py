@@ -207,7 +207,6 @@ def build_router(handler: Handler) -> APIRouter:
             found = False
             for item_index in range(len(data)):
                 if str(data[item_index]["id"]) == item_id:
-                    print("matched")
                     data[item_index]["name"] = payload.name
                     data[item_index]["category"] = payload.category
                     data[item_index]["price"] = payload.price
@@ -246,7 +245,6 @@ def build_router(handler: Handler) -> APIRouter:
             matched_index = None
             for item_index in range(len(data)):
                 if str(data[item_index]["id"]) == item_id:
-                    print("matched")
                     del data[item_index]
                     matched_index = item_index
                     break
