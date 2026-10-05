@@ -140,9 +140,6 @@ def build_router(handler: Handler) -> APIRouter:
     def create_item(payload: ItemInput):
         """POST /api/items
 
-        BUG: This handler is missing input validation entirely.
-        A request with an empty name or a negative price is accepted
-        without error.
         Add validation and return 400 Bad Request with a descriptive
         message when:
           - name is missing or blank

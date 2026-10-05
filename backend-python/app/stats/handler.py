@@ -42,7 +42,6 @@ class Handler:
                 raise HTTPException(status_code=500, detail="failed to stat data")
 
             if self._cached_mtime is not None and last_modified_time <= self._cached_mtime:
-                print("returning cache")
                 return self._cached
 
             try:
@@ -64,7 +63,6 @@ class Handler:
         return computed
 
     def compute(self, items: list[dict]) -> dict:
-        print("computing stats")
         if not items:
             return {"total": 0, "averagePrice": 0.0}
         total = len(items)
