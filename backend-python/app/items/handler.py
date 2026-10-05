@@ -204,6 +204,7 @@ def build_router(handler: Handler) -> APIRouter:
                 raise HTTPException(status_code=500, detail="failed to read data")
 
             matched_index = None
+            found = False
             for item_index in range(len(data)):
                 if str(data[item_index]["id"]) == item_id:
                     print("matched")
@@ -211,9 +212,10 @@ def build_router(handler: Handler) -> APIRouter:
                     data[item_index]["category"] = payload.category
                     data[item_index]["price"] = payload.price
                     matched_index = item_index
+                    found = True
                     break
 
-            if not matched_index:
+            if not found:
                 raise HTTPException(status_code=404, detail="not found")
 
             try:
