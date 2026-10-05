@@ -26,7 +26,7 @@ class Handler:
         self._lock = threading.RLock()
         self._cached: Optional[list[dict]] = None
         self._cached_mtime: Optional[float] = None
-        
+
     def get_stats(self):
         # returns cached version of stats
         #  if the data_path has not been modified since cache compute
