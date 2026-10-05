@@ -11,7 +11,7 @@ import threading
 import time
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel
 
 
@@ -180,8 +180,6 @@ def build_router(handler: Handler) -> APIRouter:
     def update_item(item_id: str, payload: ItemInput):
         """PUT /api/items/{id}
 
-        TODO: Implement this handler.
-
         Requirements:
           - Decode the JSON request body into an item payload (done above).
           - Validate the fields (same rules as POST).
@@ -192,13 +190,42 @@ def build_router(handler: Handler) -> APIRouter:
           - Persist the updated list and return the updated item with
             200 OK.
         """
-        raise HTTPException(status_code=501, detail="not implemented")
+
+        if len(payload.name.strip()) <= 0:
+            raise HTTPException(status_code=400, detail="name cannot be blank")
+
+        if payload.price < 0:
+            raise HTTPException(status_code=400, detail="price cannot be negative")
+
+        with handler._lock:
+            try:
+                data = handler.read_data()
+            except OSError:
+                raise HTTPException(status_code=500, detail="failed to read data")
+
+            matched_index = None
+            for item_index in range(len(data)):
+                if str(data[item_index]["id"]) == item_id:
+                    print("matched")
+                    data[item_index]["name"] = payload.name
+                    data[item_index]["category"] = payload.category
+                    data[item_index]["price"] = payload.price
+                    matched_index = item_index
+                    break
+
+            if not matched_index:
+                raise HTTPException(status_code=404, detail="not found")
+
+            try:
+                handler.write_data(data)
+            except OSError:
+                raise HTTPException(status_code=500, detail="failed to save data")
+
+        return data[matched_index]
 
     @router.delete("/api/items/{item_id}", status_code=204)
     def delete_item(item_id: str):
         """DELETE /api/items/{id}
-
-        TODO: Implement this handler.
 
         Requirements:
           - Parse the {id} path parameter.
@@ -207,6 +234,29 @@ def build_router(handler: Handler) -> APIRouter:
           - Remove it from the list and persist the file.
           - Return 204 No Content (no body).
         """
-        raise HTTPException(status_code=501, detail="not implemented")
+
+        with handler._lock:
+            try:
+                data = handler.read_data()
+            except OSError:
+                raise HTTPException(status_code=500, detail="failed to read data")
+
+            matched_index = None
+            for item_index in range(len(data)):
+                if str(data[item_index]["id"]) == item_id:
+                    print("matched")
+                    del data[item_index]
+                    matched_index = item_index
+                    break
+
+            if not matched_index:
+                raise HTTPException(status_code=404, detail="not found")
+
+            try:
+                handler.write_data(data)
+            except OSError:
+                raise HTTPException(status_code=500, detail="failed to save data")
+
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     return router
