@@ -47,26 +47,28 @@ class Handler:
     def read_data(self) -> list[dict]:
         """Reads items.json, using an in-memory cache keyed on file mtime.
 
-        BUG: There is a race condition in this function.
-        Identify it and fix it.
-        """
-        mtime = os.path.getmtime(self.data_path)
+        handles concurrent access with lock
 
+        """
         with self._lock:
+            mtime = os.path.getmtime(self.data_path)
+
             if self._cached is not None and mtime <= self._cached_mtime:
                 return self._cached
+
+            with open(self.data_path, "r", encoding="utf-8") as f:
+                items = json.load(f)
+
+            # BUG: We update the cache without holding the lock across the
+            # whole check-then-act sequence above, so two concurrent threads
+            # can both decide to re-read the file and race to overwrite each
+            # other's cache entry.
+            self._cached = items
+            self._cached_mtime = mtime
+
         # ↑ Lock is released here. Another thread can now enter and also
         #   proceed past this point before either one writes the cache.
 
-        with open(self.data_path, "r", encoding="utf-8") as f:
-            items = json.load(f)
-
-        # BUG: We update the cache without holding the lock across the
-        # whole check-then-act sequence above, so two concurrent threads
-        # can both decide to re-read the file and race to overwrite each
-        # other's cache entry.
-        self._cached = items
-        self._cached_mtime = mtime
 
         return items
 
@@ -156,6 +158,12 @@ def build_router(handler: Handler) -> APIRouter:
             data = handler.read_data()
         except OSError:
             raise HTTPException(status_code=500, detail="failed to read data")
+
+        if len(payload.name.strip()) <= 0:
+            raise HTTPException(status_code=400, detail="name cannot be blank")
+
+        if payload.price < 0:
+            raise HTTPException(status_code=400, detail="price cannot be negative")
 
         new_item = {
             "id": int(time.time() * 1000),
