@@ -239,14 +239,14 @@ def build_router(handler: Handler) -> APIRouter:
             except OSError:
                 raise HTTPException(status_code=500, detail="failed to read data")
 
-            matched_index = None
+            found = False
             for item_index in range(len(data)):
                 if str(data[item_index]["id"]) == item_id:
                     del data[item_index]
-                    matched_index = item_index
+                    found = True
                     break
 
-            if not matched_index:
+            if not found:
                 raise HTTPException(status_code=404, detail="not found")
 
             try:
